@@ -42,20 +42,16 @@ jobs:
 
       - name: Authenticate for Docker Hub
         id: docker-auth
-        env:
-          D_USER: ${{secrets.DOCKER_USER}}
-          D_PASS: ${{secrets.DOCKER_PASSWORD}}
         run: |
-          docker login -u $D_USER -p $D_PASS
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
+            -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+            --password-stdin
       - name: Build and tag Image
         run: |
           docker build -t ${{env.IMAGE}} .
       - name: Push the image to Docker hub
         run: |
           docker push ${{env.IMAGE}}
-      - name: Enable the Billing API
-        run: |
-          gcloud services enable cloudbilling.googleapis.com --project=${{secrets.GCP_PROJECT_ID}}
       - name: Deploy to GCP Run - Production environment (If a new release was published from the master branch)
         if: github.event_name == 'release' && github.event.action == 'published' && github.event.release.target_commitish == 'main'
         run: |
